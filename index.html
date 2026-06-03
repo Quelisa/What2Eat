@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃啥？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #fef9f3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #4a3b2a;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #d4763a;
+            margin-bottom: 8px;
+            letter-spacing: 4px;
+        }
+
+        .header p {
+            color: #a08060;
+            font-size: 0.95rem;
+        }
+
+        .selector-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .selector label {
+            font-size: 0.8rem;
+            color: #a08060;
+            font-weight: 500;
+        }
+
+        .stepper {
+            display: flex;
+            width: 120px;
+            height: 48px;
+            background: #fff;
+            border: 2px solid #e8d5c4;
+            border-radius: 12px;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .stepper-value {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4a3b2a;
+        }
+
+        .stepper-slider {
+            width: 24px;
+            position: relative;
+            cursor: pointer;
+            border-left: 1px solid #f0e4d8;
+        }
+
+        .stepper-slider::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: #e8d5c4;
+            transform: translateX(-50%);
+            border-radius: 1px;
+        }
+
+        .stepper-thumb {
+            position: absolute;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: #d4763a;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            transition: top 0.2s;
+            box-shadow: 0 1px 3px rgba(212, 118, 58, 0.3);
+        }
+
+        .main-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: none;
+            background: #d4763a;
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(212, 118, 58, 0.35);
+            transition: all 0.2s ease;
+            margin-bottom: 36px;
+            letter-spacing: 4px;
+        }
+
+        .main-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(212, 118, 58, 0.45);
+        }
+
+        .main-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .main-btn.shaking {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-8deg); }
+            40% { transform: rotate(8deg); }
+            60% { transform: rotate(-5deg); }
+            80% { transform: rotate(5deg); }
+        }
+
+        .result-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 36px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            opacity: 0;
+            transform: translateY(16px);
+            transition: all 0.4s ease;
+        }
+
+        .result-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-dish {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #d4763a;
+            margin-bottom: 16px;
+        }
+
+        .result-divider {
+            width: 48px;
+            height: 3px;
+            background: #e8d5c4;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+
+        .result-text {
+            font-size: 1.05rem;
+            color: #7a6550;
+            line-height: 1.7;
+        }
+
+        .meal-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .meal-tag.lunch {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .meal-tag.dinner {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 30px;
+            color: #c0a890;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>今天吃啥？</h1>
+        <p>让每一餐都值得期待</p>
+    </div>
+
+    <div class="selector-group">
+        <div class="selector">
+            <label>星期</label>
+            <div class="stepper" id="weekday-stepper">
+                <div class="stepper-value" id="weekday-value">周一</div>
+                <div class="stepper-slider" id="weekday-slider" onclick="handleSliderClick(event, 'weekday')">
+                    <div class="stepper-thumb" id="weekday-thumb"></div>
+                </div>
+            </div>
+        </div>
+        <div class="selector">
+            <label>餐次</label>
+            <div class="stepper" id="meal-stepper">
+                <div class="stepper-value" id="meal-value">中餐</div>
+                <div class="stepper-slider" id="meal-slider" onclick="handleSliderClick(event, 'meal')">
+                    <div class="stepper-thumb" id="meal-thumb"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="main-btn" id="btn" onclick="pick()">吃啥</button>
+
+    <div class="result-card" id="result">
+        <div class="meal-tag" id="tag"></div>
+        <div class="result-dish" id="dish"></div>
+        <div class="result-divider"></div>
+        <div class="result-text" id="text"></div>
+    </div>
+
+    <div class="footer">好好吃饭，认真生活</div>
+
+    <script>
+        const dishes = [
+            {
+                name: "烧鸭",
+                quotes: [
+                    "滋滋冒油的烧鸭，皮脆肉嫩，配上一碗白饭，今天也要好好犒劳自己呀～",
+                    "金黄油亮的鸭皮，一口咬下去满嘴香，周一的疲惫都被治愈了！"
+                ]
+            },
+            {
+                name: "瓦罐汤",
+                quotes: [
+                    "慢火细炖的瓦罐汤，暖胃又暖心，忙碌的日子也要记得喝汤哦～",
+                    "一罐好汤，是时间给的小礼物。今天对自己温柔一点吧～"
+                ]
+            },
+            {
+                name: "喜家德",
+                quotes: [
+                    "皮薄馅大的饺子，一口一个幸福，今天的好运气从这一口开始～",
+                    "饺子要吃烫烫的，日子要过暖暖的，这一盘是今日份的小确幸！"
+                ]
+            },
+            {
+                name: "老乡鸡",
+                quotes: [
+                    "家常的味道最治愈，就像妈妈做的菜，简单却满是温暖～",
+                    "一碗热饭几样小菜，平凡的日子也有满满的幸福感～"
+                ]
+            },
+            {
+                name: "麦当劳",
+                quotes: [
+                    "偶尔也要来点快乐肥宅餐！汉堡薯条配可乐，烦恼统统抛脑后～",
+                    "今天允许自己做个小朋友，快乐就是最大的正义！"
+                ]
+            },
+            {
+                name: "自选菜",
+                quotes: [
+                    "今天的选择权交给你，想吃什么拿什么，自由自在最舒服～",
+                    "琳琅满目的自选菜，每一种都是不同的惊喜，去发现你的最爱吧！"
+                ]
+            },
+            {
+                name: "酱骨",
+                quotes: [
+                    "大口吃肉的快乐谁能懂？酱香四溢，啃完骨头记得舔舔手指～",
+                    "啃骨头的快乐是纯粹的，放下手机，专心享受这一顿吧！"
+                ]
+            },
+            {
+                name: "跷脚牛肉",
+                quotes: [
+                    "牛肉鲜嫩，汤底清香，跷着脚吃才够味，放松一下吧～",
+                    "一口鲜汤下肚，整个人都舒坦了，今天也要给自己充充电～"
+                ]
+            },
+            {
+                name: "小笼包",
+                quotes: [
+                    "轻轻提，慢慢移，先开窗，后喝汤，一笼小笼包治愈一整天～",
+                    "薄薄的面皮包裹着满满的汤汁，咬开的那一刻，幸福也流了出来～"
+                ]
+            },
+            {
+                name: "云南生烫米线",
+                quotes: [
+                    "热腾腾的米线滑溜溜，生烫的鲜嫩配上酸辣的汤底，这才是生活的烟火气～",
+                    "一碗米线，是云南的风也是你的餐桌，嗦粉的快感谁能拒绝！"
+                ]
+            }
+        ];
+
+        const weekdayOptions = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        const mealOptions = ['中餐', '晚餐'];
+        let weekdayIndex = 0;
+        let mealIndex = 0;
+
+        function updateThumb(type) {
+            const options = type === 'weekday' ? weekdayOptions : mealOptions;
+            const index = type === 'weekday' ? weekdayIndex : mealIndex;
+            const thumb = document.getElementById(type + '-thumb');
+            const slider = document.getElementById(type + '-slider');
+            const trackHeight = slider.clientHeight - 16;
+            const segments = Math.max(options.length - 1, 1);
+            const top = 8 + (trackHeight * index / segments);
+            thumb.style.top = top + 'px';
+        }
+
+        function step(type, dir) {
+            if (type === 'weekday') {
+                weekdayIndex = (weekdayIndex + dir + weekdayOptions.length) % weekdayOptions.length;
+                document.getElementById('weekday-value').textContent = weekdayOptions[weekdayIndex];
+                updateThumb('weekday');
+            } else {
+                mealIndex = (mealIndex + dir + mealOptions.length) % mealOptions.length;
+                document.getElementById('meal-value').textContent = mealOptions[mealIndex];
+                updateThumb('meal');
+            }
+        }
+
+        function handleSliderClick(e, type) {
+            const slider = e.currentTarget;
+            const rect = slider.getBoundingClientRect();
+            const y = e.clientY - rect.top;
+            step(type, y < rect.height / 2 ? -1 : 1);
+        }
+
+        function initDrag(type) {
+            const thumb = document.getElementById(type + '-thumb');
+            const slider = document.getElementById(type + '-slider');
+            const options = type === 'weekday' ? weekdayOptions : mealOptions;
+
+            let dragging = false;
+
+            thumb.addEventListener('mousedown', (e) => {
+                dragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const rect = slider.getBoundingClientRect();
+                const y = e.clientY - rect.top - 8;
+                const trackHeight = rect.height - 16;
+                let ratio = y / trackHeight;
+                ratio = Math.max(0, Math.min(1, ratio));
+                const index = Math.round(ratio * (options.length - 1 || 1));
+                if (type === 'weekday') weekdayIndex = index;
+                else mealIndex = index;
+                document.getElementById(type + '-value').textContent = options[index];
+                updateThumb(type);
+            });
+
+            document.addEventListener('mouseup', () => dragging = false);
+        }
+
+        function pick() {
+            const btn = document.getElementById('btn');
+            const result = document.getElementById('result');
+            const dishEl = document.getElementById('dish');
+            const textEl = document.getElementById('text');
+            const tagEl = document.getElementById('tag');
+            const meal = mealOptions[mealIndex];
+            const weekday = weekdayOptions[weekdayIndex];
+
+            btn.classList.add('shaking');
+            result.classList.remove('show');
+
+            setTimeout(() => {
+                btn.classList.remove('shaking');
+
+                const dish = dishes[Math.floor(Math.random() * dishes.length)];
+                const quote = dish.quotes[Math.floor(Math.random() * dish.quotes.length)];
+
+                tagEl.textContent = weekday + ' · ' + meal;
+                tagEl.className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
+                dishEl.textContent = dish.name;
+                textEl.textContent = quote;
+
+                result.classList.add('show');
+            }, 400);
+        }
+
+        function autoDetect() {
+            const now = new Date();
+            const hour = now.getHours();
+            const day = now.getDay();
+
+            const dayMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const targetDay = dayMap[day];
+            const targetMeal = (hour >= 10 && hour < 15) ? '中餐' : '晚餐';
+
+            weekdayIndex = weekdayOptions.indexOf(targetDay);
+            mealIndex = mealOptions.indexOf(targetMeal);
+
+            document.getElementById('weekday-value').textContent = weekdayOptions[weekdayIndex];
+            document.getElementById('meal-value').textContent = mealOptions[mealIndex];
+            updateThumb('weekday');
+            updateThumb('meal');
+        }
+
+        initDrag('weekday');
+        initDrag('meal');
+        autoDetect();
+    </script>
+</body>
+</html>
