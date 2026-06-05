@@ -312,17 +312,17 @@
                 ]
             },
             {
-                name: "小笼包",
-                quotes: [
-                    "轻轻提，慢慢移，先开窗，后喝汤，一笼小笼包治愈一整天～",
-                    "薄薄的面皮包裹着满满的汤汁，咬开的那一刻，幸福也流了出来～"
-                ]
-            },
-            {
                 name: "云南生烫米线",
                 quotes: [
                     "热腾腾的米线滑溜溜，生烫的鲜嫩配上酸辣的汤底，这才是生活的烟火气～",
                     "一碗米线，是云南的风也是你的餐桌，嗦粉的快感谁能拒绝！"
+                ]
+            },
+            {
+                name: "轻食",
+                quotes: [
+                    "清爽不油腻，给身体放个假，轻盈的一餐也能带来满满的能量～",
+                    "蔬菜、水果、优质蛋白，简单搭配却营养满分，健康生活从今天开始！"
                 ]
             }
         ];
@@ -406,7 +406,22 @@
             setTimeout(() => {
                 btn.classList.remove('shaking');
 
-                const dish = dishes[Math.floor(Math.random() * dishes.length)];
+                const available = dishes.filter(d => {
+                    if (d.name === '麦当劳') return weekday === '周五' && meal === '晚餐';
+                    if (d.name === '老乡鸡') return meal === '晚餐';
+                    return true;
+                });
+
+                if (available.length === 0) {
+                    tagEl.textContent = weekday + ' · ' + meal;
+                    tagEl.className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
+                    dishEl.textContent = '今天换个口味吧';
+                    textEl.textContent = '这个时间没有特别推荐的限定菜品，手动调整一下时间再试试～';
+                    result.classList.add('show');
+                    return;
+                }
+
+                const dish = available[Math.floor(Math.random() * available.length)];
                 const quote = dish.quotes[Math.floor(Math.random() * dish.quotes.length)];
 
                 tagEl.textContent = weekday + ' · ' + meal;
