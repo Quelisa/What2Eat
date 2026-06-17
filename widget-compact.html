@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃啥？挂件版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            background: transparent;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            color: #3a2e20;
+        }
+
+        .widget {
+            margin: 12px;
+            background: #fffaf5;
+            border-radius: 22px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+            border: 1px solid rgba(200, 170, 140, 0.3);
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 14px;
+            padding: 18px 18px 16px 20px;
+            min-height: 156px;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 22px;
+            cursor: grab;
+            border-top-left-radius: 22px;
+            border-top-right-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drag-handle::before {
+            content: "";
+            margin-top: 6px;
+            width: 32px; height: 3px;
+            border-radius: 2px;
+            background: rgba(180, 140, 100, 0.3);
+        }
+        .drag-handle:hover::before { background: rgba(180, 140, 100, 0.55); }
+
+        .left {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+            padding-top: 10px;
+        }
+        .clock {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+        .date {
+            font-size: 0.72rem;
+            color: #8a7a6a;
+            font-weight: 500;
+        }
+        .meal-tag {
+            margin-top: 6px;
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            width: fit-content;
+        }
+        .meal-tag.lunch  { background: #ffe8c8; color: #a04000; }
+        .meal-tag.dinner { background: #ffd8e4; color: #900040; }
+
+        .right {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            padding-top: 10px;
+            min-width: 0;
+        }
+        .dish {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #c25e24;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .quote {
+            font-size: 0.72rem;
+            color: #6a5a4a;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .btn {
+            margin-top: auto;
+            align-self: flex-start;
+            border: none;
+            background: #d4763a;
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 7px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(212, 118, 58, 0.3);
+            transition: all 0.15s ease;
+        }
+        .btn:hover  { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(212, 118, 58, 0.4); }
+        .btn:active { transform: translateY(1px) scale(0.98); }
+
+        .controls {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            margin-top: 4px;
+            border-top: 1px dashed rgba(180, 140, 100, 0.25);
+            font-size: 0.7rem;
+            color: #8a7a6a;
+        }
+        .controls .seg {
+            display: flex;
+            gap: 2px;
+            background: rgba(212, 180, 150, 0.18);
+            padding: 2px;
+            border-radius: 10px;
+        }
+        .controls .seg button {
+            border: none;
+            background: transparent;
+            font-size: 0.7rem;
+            padding: 3px 9px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #8a7a6a;
+            font-weight: 500;
+        }
+        .controls .seg button.active {
+            background: #fff;
+            color: #c25e24;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .controls .weekday {
+            font-weight: 600;
+            color: #6a5a4a;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 8px;
+        }
+        .controls .weekday:hover { background: rgba(212, 180, 150, 0.18); }
+    </style>
+</head>
+<body>
+    <div class="widget">
+        <div class="drag-handle" title="拖动这里移动挂件"></div>
+
+        <div class="left">
+            <div class="clock" id="clock">12:00</div>
+            <div class="date" id="date">1月1日 周一</div>
+            <div class="meal-tag lunch" id="tag">中餐</div>
+        </div>
+
+        <div class="right">
+            <div class="dish" id="dish">烧鸭</div>
+            <div class="quote" id="quote">点击「换一家」开启今日好运～</div>
+            <button class="btn" id="btn">换一家</button>
+        </div>
+
+        <div class="controls">
+            <div class="weekday" id="weekday" title="点击切换星期">周一</div>
+            <div class="seg" id="meal-seg">
+                <button data-v="中餐" class="active">中餐</button>
+                <button data-v="晚餐">晚餐</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dishes = [
+            { name: "烧鸭", quotes: ["皮脆肉嫩，配碗白饭犒劳一下自己～", "金黄油亮，一口下去满嘴香，疲惫被治愈！"] },
+            { name: "瓦罐汤", quotes: ["慢火细炖，暖胃又暖心，记得喝汤哦～", "一罐好汤是时间给的小礼物，对自己温柔点～"] },
+            { name: "喜家德", quotes: ["皮薄馅大，一口一个幸福从这开始～", "饺子要吃烫烫的，日子要过暖暖的～"] },
+            { name: "老乡鸡", quotes: ["家常味最治愈，简单却满是温暖～", "热饭小菜，平凡日子也有满满幸福感～"] },
+            { name: "麦当劳", quotes: ["快乐肥宅餐，烦恼统统抛脑后～", "今天允许自己做小朋友，快乐最大！"] },
+            { name: "自选菜", quotes: ["选择权交给你，自由自在最舒服～", "琳琅满目，每种都是不同的惊喜～"] },
+            { name: "酱骨", quotes: ["大口吃肉的快乐谁能懂？啃完记得舔手指～", "纯粹的快乐，放下手机专心享受～"] },
+            { name: "跷脚牛肉", quotes: ["牛肉鲜嫩，跷着脚吃才够味～", "鲜汤下肚整个人都舒坦了～"] },
+            { name: "寿喜锅", quotes: ["咕嘟冒泡，蘸蛋液一口滑进胃里～", "甜香汤底里翻滚，是冬日小太阳～"] },
+            { name: "云南生烫米线", quotes: ["热腾腾滑溜溜，酸辣的烟火气～", "嗦粉的快感谁能拒绝！"] },
+            { name: "轻食", quotes: ["清爽不油腻，给身体放个假～", "蔬菜水果蛋白，营养满分！"] }
+        ];
+
+        const weekdayOptions = ['周一','周二','周三','周四','周五','周六','周日'];
+        const mealOptions = ['中餐','晚餐'];
+        let weekdayIndex = 0;
+        let mealIndex = 0;
+
+        const $ = (id) => document.getElementById(id);
+
+        function updateClock() {
+            const now = new Date();
+            $('clock').textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+            const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            const wds = ['周日','周一','周二','周三','周四','周五','周六'];
+            $('date').textContent = months[now.getMonth()] + now.getDate() + '日 ' + wds[now.getDay()];
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function refreshUI() {
+            $('weekday').textContent = weekdayOptions[weekdayIndex];
+            const meal = mealOptions[mealIndex];
+            $('tag').textContent = meal;
+            $('tag').className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
+            document.querySelectorAll('#meal-seg button').forEach(b => {
+                b.classList.toggle('active', b.dataset.v === meal);
+            });
+        }
+
+        function pick() {
+            const meal = mealOptions[mealIndex];
+            const weekday = weekdayOptions[weekdayIndex];
+            const available = dishes.filter(d => {
+                if (d.name === '麦当劳') return weekday === '周五' && meal === '晚餐';
+                if (d.name === '老乡鸡') return meal === '晚餐';
+                return true;
+            });
+            if (available.length === 0) {
+                $('dish').textContent = '换个时间试试';
+                $('quote').textContent = '这个时段没有特别推荐～';
+                return;
+            }
+            const dish = available[Math.floor(Math.random() * available.length)];
+            $('dish').textContent = dish.name;
+            $('quote').textContent = dish.quotes[Math.floor(Math.random() * dish.quotes.length)];
+        }
+
+        $('weekday').addEventListener('click', () => {
+            weekdayIndex = (weekdayIndex + 1) % weekdayOptions.length;
+            refreshUI();
+        });
+        document.querySelectorAll('#meal-seg button').forEach(b => {
+            b.addEventListener('click', () => {
+                mealIndex = mealOptions.indexOf(b.dataset.v);
+                refreshUI();
+            });
+        });
+        $('btn').addEventListener('click', pick);
+
+        function autoDetect() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const dayMap = ['周日','周一','周二','周三','周四','周五','周六'];
+            weekdayIndex = weekdayOptions.indexOf(dayMap[day]);
+            mealIndex = mealOptions.indexOf((hour >= 10 && hour < 15) ? '中餐' : '晚餐');
+            refreshUI();
+        }
+        autoDetect();
+        setTimeout(pick, 400);
+
+        // —— Hammerspoon 桥接：拖拽 + 自适应尺寸 ——
+        const send = (msg) => {
+            try {
+                if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hsbridge) {
+                    window.webkit.messageHandlers.hsbridge.postMessage(msg);
+                }
+            } catch (e) {}
+        };
+        document.querySelector('.drag-handle').addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            send('drag-start');
+        });
+        function reportSize() {
+            const w = document.querySelector('.widget');
+            if (!w) return;
+            const r = w.getBoundingClientRect();
+            send({ type: 'resize', height: Math.ceil(r.height + 24), width: Math.ceil(r.width + 24) });
+        }
+        window.addEventListener('load', () => setTimeout(reportSize, 50));
+        new ResizeObserver(reportSize).observe(document.querySelector('.widget'));
+    </script>
+</body>
+</html>

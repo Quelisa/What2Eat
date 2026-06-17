@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今天吃啥？</title>
+    <title>今天吃啥？壁纸版</title>
     <style>
         * {
             margin: 0;
@@ -11,39 +11,88 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            background: #fef9f3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            color: #4a3b2a;
+        html, body {
+            background: transparent;
         }
 
-        .header {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #3a2e20;
+            overflow: hidden;          /* 永不出现滚动条 */
+        }
+
+        .glass-card {
+            background: #fffaf5;
+            border-radius: 28px;
+            padding: 36px 40px;
+            margin: 16px;
             text-align: center;
-            margin-bottom: 30px;
+            box-shadow: 0 16px 56px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(200, 170, 140, 0.3);
+            position: relative;
+        }
+
+        /* 顶部拖拽条提示（与 init.lua 里的 DRAG_BAR_H = 36 对应） */
+        .drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+        }
+        .drag-handle::before {
+            content: "";
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(180, 140, 100, 0.35);
+        }
+        .drag-handle:hover::before {
+            background: rgba(180, 140, 100, 0.6);
+        }
+
+        .clock {
+            font-size: 2.8rem;
+            font-weight: 300;
+            color: #3a2e20;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .date {
+            font-size: 0.9rem;
+            color: #6a5a4a;
+            margin-bottom: 24px;
+            font-weight: 500;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            color: #d4763a;
-            margin-bottom: 8px;
-            letter-spacing: 4px;
+            font-size: 1.5rem;
+            color: #c25e24;
+            margin-bottom: 6px;
+            letter-spacing: 3px;
         }
 
         .header p {
-            color: #a08060;
-            font-size: 0.95rem;
+            color: #7a6a5a;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
         }
 
         .selector-group {
             display: flex;
             gap: 16px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
+            margin-bottom: 24px;
             justify-content: center;
         }
 
@@ -55,20 +104,21 @@
         }
 
         .selector label {
-            font-size: 0.8rem;
-            color: #a08060;
+            font-size: 0.75rem;
+            color: #a09080;
             font-weight: 500;
         }
 
         .stepper {
             display: flex;
-            width: 120px;
-            height: 48px;
+            width: 110px;
+            height: 44px;
             background: #fff;
-            border: 2px solid #e8d5c4;
-            border-radius: 12px;
+            border: 1px solid #d4c4b4;
+            border-radius: 10px;
             overflow: hidden;
             user-select: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
 
         .stepper-value {
@@ -76,16 +126,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #4a3b2a;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #3a2e20;
         }
 
         .stepper-slider {
-            width: 24px;
+            width: 22px;
             position: relative;
             cursor: pointer;
-            border-left: 1px solid #f0e4d8;
+            border-left: 1px solid rgba(212, 180, 150, 0.3);
         }
 
         .stepper-slider::before {
@@ -95,7 +145,7 @@
             top: 8px;
             bottom: 8px;
             width: 2px;
-            background: #e8d5c4;
+            background: rgba(212, 180, 150, 0.5);
             transform: translateX(-50%);
             border-radius: 1px;
         }
@@ -113,24 +163,26 @@
         }
 
         .main-btn {
-            width: 160px;
-            height: 160px;
+            position: relative;
+            z-index: 10;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             border: none;
             background: #d4763a;
             color: #fff;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(212, 118, 58, 0.35);
+            box-shadow: 0 6px 20px rgba(212, 118, 58, 0.3);
             transition: all 0.2s ease;
-            margin-bottom: 36px;
-            letter-spacing: 4px;
+            margin-bottom: 28px;
+            letter-spacing: 3px;
         }
 
         .main-btn:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 32px rgba(212, 118, 58, 0.45);
+            box-shadow: 0 10px 28px rgba(212, 118, 58, 0.4);
         }
 
         .main-btn:active {
@@ -151,107 +203,114 @@
 
         .result-card {
             background: #fff;
-            border-radius: 20px;
-            padding: 32px 36px;
-            max-width: 420px;
-            width: 100%;
+            border-radius: 18px;
+            padding: 24px 28px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
             opacity: 0;
-            transform: translateY(16px);
+            transform: translateY(12px);
             transition: all 0.4s ease;
+            pointer-events: none;
         }
 
         .result-card.show {
             opacity: 1;
             transform: translateY(0);
+            pointer-events: auto;
         }
 
         .result-dish {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #d4763a;
-            margin-bottom: 16px;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #c25e24;
+            margin-bottom: 10px;
         }
 
         .result-divider {
-            width: 48px;
-            height: 3px;
-            background: #e8d5c4;
-            border-radius: 2px;
-            margin: 0 auto 16px;
+            width: 40px;
+            height: 2px;
+            background: rgba(212, 180, 150, 0.5);
+            border-radius: 1px;
+            margin: 0 auto 10px;
         }
 
         .result-text {
-            font-size: 1.05rem;
-            color: #7a6550;
+            font-size: 0.95rem;
+            color: #5a4a3a;
             line-height: 1.7;
+            font-weight: 500;
         }
 
         .meal-tag {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin-bottom: 12px;
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-size: 0.7rem;
+            margin-bottom: 10px;
             font-weight: 500;
         }
 
         .meal-tag.lunch {
-            background: #fff3e0;
-            color: #e65100;
+            background: #ffe8c8;
+            color: #a04000;
         }
 
         .meal-tag.dinner {
-            background: #fce4ec;
-            color: #c2185b;
+            background: #ffd8e4;
+            color: #900040;
         }
 
         .footer {
-            margin-top: auto;
-            padding-top: 30px;
-            color: #c0a890;
-            font-size: 0.8rem;
+            margin-top: 20px;
+            color: #8a7a6a;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>今天吃啥？</h1>
-        <p>让每一餐都值得期待</p>
-    </div>
+    <div class="glass-card">
+        <div class="drag-handle" title="拖动这里移动挂件"></div>
+        <div class="clock" id="clock">12:00</div>
+        <div class="date" id="date">1月1日 周一</div>
 
-    <div class="selector-group">
-        <div class="selector">
-            <label>星期</label>
-            <div class="stepper" id="weekday-stepper">
-                <div class="stepper-value" id="weekday-value">周一</div>
-                <div class="stepper-slider" id="weekday-slider" onclick="handleSliderClick(event, 'weekday')">
-                    <div class="stepper-thumb" id="weekday-thumb"></div>
+        <div class="header">
+            <h1>今天吃啥？</h1>
+            <p>让每一餐都值得期待</p>
+        </div>
+
+        <div class="selector-group">
+            <div class="selector">
+                <label>星期</label>
+                <div class="stepper" id="weekday-stepper">
+                    <div class="stepper-value" id="weekday-value">周一</div>
+                    <div class="stepper-slider" id="weekday-slider" onclick="handleSliderClick(event, 'weekday')">
+                        <div class="stepper-thumb" id="weekday-thumb"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="selector">
+                <label>餐次</label>
+                <div class="stepper" id="meal-stepper">
+                    <div class="stepper-value" id="meal-value">中餐</div>
+                    <div class="stepper-slider" id="meal-slider" onclick="handleSliderClick(event, 'meal')">
+                        <div class="stepper-thumb" id="meal-thumb"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="selector">
-            <label>餐次</label>
-            <div class="stepper" id="meal-stepper">
-                <div class="stepper-value" id="meal-value">中餐</div>
-                <div class="stepper-slider" id="meal-slider" onclick="handleSliderClick(event, 'meal')">
-                    <div class="stepper-thumb" id="meal-thumb"></div>
-                </div>
-            </div>
+
+        <button class="main-btn" id="btn">吃啥</button>
+
+        <div class="result-card" id="result">
+            <div class="meal-tag" id="tag"></div>
+            <div class="result-dish" id="dish"></div>
+            <div class="result-divider"></div>
+            <div class="result-text" id="text"></div>
         </div>
+
+        <div class="footer">好好吃饭，认真生活</div>
     </div>
-
-    <button class="main-btn" id="btn" onclick="pick()">吃啥</button>
-
-    <div class="result-card" id="result">
-        <div class="meal-tag" id="tag"></div>
-        <div class="result-dish" id="dish"></div>
-        <div class="result-divider"></div>
-        <div class="result-text" id="text"></div>
-    </div>
-
-    <div class="footer">好好吃饭，认真生活</div>
 
     <script>
         const dishes = [
@@ -339,6 +398,20 @@
         let weekdayIndex = 0;
         let mealIndex = 0;
 
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = h + ':' + m;
+
+            const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            document.getElementById('date').textContent = months[now.getMonth()] + now.getDate() + '日 ' + weekdays[now.getDay()];
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
         function updateThumb(type) {
             const options = type === 'weekday' ? weekdayOptions : mealOptions;
             const index = type === 'weekday' ? weekdayIndex : mealIndex;
@@ -407,37 +480,30 @@
             const meal = mealOptions[mealIndex];
             const weekday = weekdayOptions[weekdayIndex];
 
-            btn.classList.add('shaking');
-            result.classList.remove('show');
+            const available = dishes.filter(d => {
+                if (d.name === '麦当劳') return weekday === '周五' && meal === '晚餐';
+                if (d.name === '老乡鸡') return meal === '晚餐';
+                return true;
+            });
 
-            setTimeout(() => {
-                btn.classList.remove('shaking');
-
-                const available = dishes.filter(d => {
-                    if (d.name === '麦当劳') return weekday === '周五' && meal === '晚餐';
-                    if (d.name === '老乡鸡') return meal === '晚餐';
-                    return true;
-                });
-
-                if (available.length === 0) {
-                    tagEl.textContent = weekday + ' · ' + meal;
-                    tagEl.className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
-                    dishEl.textContent = '今天换个口味吧';
-                    textEl.textContent = '这个时间没有特别推荐的限定菜品，手动调整一下时间再试试～';
-                    result.classList.add('show');
-                    return;
-                }
-
-                const dish = available[Math.floor(Math.random() * available.length)];
-                const quote = dish.quotes[Math.floor(Math.random() * dish.quotes.length)];
-
+            if (available.length === 0) {
                 tagEl.textContent = weekday + ' · ' + meal;
                 tagEl.className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
-                dishEl.textContent = dish.name;
-                textEl.textContent = quote;
-
+                dishEl.textContent = '今天换个口味吧';
+                textEl.textContent = '这个时间没有特别推荐的限定菜品，手动调整一下时间再试试～';
                 result.classList.add('show');
-            }, 400);
+                return;
+            }
+
+            const dish = available[Math.floor(Math.random() * available.length)];
+            const quote = dish.quotes[Math.floor(Math.random() * dish.quotes.length)];
+
+            tagEl.textContent = weekday + ' · ' + meal;
+            tagEl.className = 'meal-tag ' + (meal === '中餐' ? 'lunch' : 'dinner');
+            dishEl.textContent = dish.name;
+            textEl.textContent = quote;
+
+            result.classList.add('show');
         }
 
         function autoDetect() {
@@ -460,7 +526,40 @@
 
         initDrag('weekday');
         initDrag('meal');
+        document.getElementById('btn').addEventListener('click', pick);
         autoDetect();
+        setTimeout(pick, 600);
+
+        // 拖拽条 → 通知 Hammerspoon 启动窗口拖动
+        (function () {
+            const handle = document.querySelector('.drag-handle');
+            if (!handle) return;
+            handle.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                try {
+                    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hsbridge) {
+                        window.webkit.messageHandlers.hsbridge.postMessage('drag-start');
+                    }
+                } catch (err) {}
+            });
+        })();
+
+        // 把内容真实高度报告给 Hammerspoon，让窗口自适应不再出现滚动
+        (function () {
+            function reportHeight() {
+                try {
+                    const card = document.querySelector('.glass-card');
+                    if (!card || !window.webkit || !window.webkit.messageHandlers || !window.webkit.messageHandlers.hsbridge) return;
+                    const rect = card.getBoundingClientRect();
+                    // 卡片高度 + 上下 margin (16*2)
+                    const h = Math.ceil(rect.height + 32);
+                    window.webkit.messageHandlers.hsbridge.postMessage({ type: 'resize', height: h });
+                } catch (err) {}
+            }
+            // 首次 + 内容变化时上报
+            window.addEventListener('load', () => setTimeout(reportHeight, 50));
+            new ResizeObserver(reportHeight).observe(document.querySelector('.glass-card'));
+        })();
     </script>
 </body>
 </html>
